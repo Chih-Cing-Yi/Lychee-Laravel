@@ -55,9 +55,7 @@ class Album extends Model
 		// Parse date
 		$album['sysdate'] = $this->created_at->format('F Y');
 		$album['min_takestamp'] = $this->min_takestamp == null ? '' : $this->min_takestamp->format('M Y');
-//        strftime('%B %Y', $this->min_takestamp);
 		$album['max_takestamp'] = $this->max_takestamp == null ? '' : $this->max_takestamp->format('M Y');
-		//strftime('%B %Y', $this->max_takestamp);
 
 		// Parse password
 		$album['password'] = ($this->password == '' ? '0' : '1');
@@ -172,7 +170,7 @@ class Album extends Model
 	public function owner()
 	{
 		return $this->belongsTo('App\User', 'owner_id', 'id')->withDefault([
-			'id' => 0,
+			'id'       => 0,
 			'username' => 'Admin'
 		]);
 	}
@@ -234,6 +232,36 @@ class Album extends Model
 	public function children()
 	{
 		return $this->hasMany('App\Album', 'parent_id', 'id');
+	}
+
+
+
+	public function children_public()
+	{
+		return $this->hasMany('App\Album', 'parent_id', 'id')
+			->where('public', '=', true)
+			->where('visible_hidden', '=', true);
+	}
+
+
+
+	public function children_shared($id)
+	{
+		return $this->hasMany('App\Album', 'parent_id', 'id')
+			->where(
+				function ($query) use ($id) {
+					// album is shared with user
+					$query->whereIn('id', function ($query) use ($id) {
+						$query->select('album_id')
+							->from('user_album')
+							->where('user_id', '=', $id);
+					})
+						// or album is visible to user
+						->orWhere(
+							function ($query) {
+								$query->where('public', '=', true)->where('visible_hidden', '=', true);
+							});
+				});
 	}
 
 

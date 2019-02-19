@@ -78,10 +78,7 @@ class AlbumController extends Controller
 				$photos_sql = Photo::select_unsorted(Photo::OwnedBy(Session::get('UserID')));
 				break;
 			default:
-				$album = Album::with([
-					'owner',
-					'children'
-				])->find($request['albumID']);
+				$album = Album::find($request['albumID']);
 				if ($album === null) {
 					Logs::error(__METHOD__, __LINE__, 'Could not find specified album');
 					return 'false';
